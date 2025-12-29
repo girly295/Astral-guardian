@@ -6,9 +6,15 @@ from threading import Thread
 
 # --- KEEP ALIVE ---
 app = Flask('')
+
 @app.route('/')
-def home(): return "Astral Guardian is Awake!"
-def run(): app.run(host='0.0.0.0', port=8080)
+def home():
+    return "Astral Guardian is Online and Guarding the Stars!"
+
+def run():
+  # We use port 8080 because Replit likes it best
+  app.run(host='0.0.0.0', port=8080)
+
 def keep_alive():
     t = Thread(target=run)
     t.start()
