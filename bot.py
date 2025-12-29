@@ -25,37 +25,43 @@ async def on_ready():
     print(f'🌌 Astral Guardian is Online as {bot.user}')
     await bot.change_presence(activity=discord.Game(name="Watching the Stars 🌌"))
 
-# --- MATCH COMMAND ---
+# --- UPDATED MATCH COMMAND ---
 @bot.tree.command(name="match", description="Find a random star to chat with!")
 async def match(interaction: discord.Interaction):
     user = interaction.user
     
-    # Check if they are already waiting
+    # 1. Safety Check: Don't let the same person join twice
     if user in bot.waiting_room:
-        await interaction.response.send_message("🌟 You are already waiting in the stars!", ephemeral=True)
+        await interaction.response.send_message("🌟 You are already searching the galaxy! Please wait for a partner.", ephemeral=True)
         return
 
-    # If nobody is waiting, add them to the queue
+    # 2. If nobody is waiting, add them to the queue
     if not bot.waiting_room:
         bot.waiting_room.append(user)
         await interaction.response.send_message("🌌 You've entered the Astral Queue. Waiting for a connection...", ephemeral=True)
     
-    # If someone IS waiting, pair them up!
+    # 3. If someone IS waiting, pair them up!
     else:
         partner = bot.waiting_room.pop(0)
         
-        # Create a private thread in the current channel
+        # 4. Final Safety: Ensure you didn't match with yourself
+        if partner.id == user.id:
+            bot.waiting_room.append(user) # Put you back in
+            await interaction.response.send_message("🛰️ Still searching for a partner...", ephemeral=True)
+            return
+
+        # Create the thread
         thread = await interaction.channel.create_thread(
             name=f"✨ Match: {user.name} & {partner.name}",
             type=discord.ChannelType.private_thread,
-            auto_archive_duration=10080 # Stays open for 7 days of silence
+            auto_archive_duration=10080
         )
         
         await thread.add_user(user)
         await thread.add_user(partner)
         
-        await interaction.response.send_message(f"✅ Connection Found! Enter the portal: {thread.mention}", ephemeral=True)
-        await thread.send(f"🌌 **The stars have aligned.**\n{user.mention} ⟷ {partner.mention}\n\n*Use `/leave` to close this portal.*")
+        await interaction.response.send_message(f"✅ Connection Found! {thread.mention}", ephemeral=True)
+        await thread.send(f"🌌 **The stars have aligned.**\n{user.mention} ⟷ {partner.mention}")
 
 # --- LEAVE COMMAND ---
 @bot.tree.command(name="leave", description="Close the current star portal.")
